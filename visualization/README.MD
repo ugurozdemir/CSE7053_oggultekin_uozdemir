@@ -4,3 +4,5 @@ There are three graphs. TAKDIR, TESEKKUR and DOGUMGUNU. All graphs are grouped b
 ![alt text](all.png)
 
 Here is a screenshot of the web page. From network dropbox, different graphs can be selected. From Visual Style dropbox, different visualization sytles can be selected. From Layout dropbox, different layout can be selected. As a defalult layout, employees are grouped by their departmentID
+
+Graphs can be zoomed in/out by mouse wheel. Node labels are their departmantID. If Show/Hide Table is selected from the right toolbar, the properties of selected node or edge can be viewed at the bottom of the page.
