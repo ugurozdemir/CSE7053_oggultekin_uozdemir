@@ -65,12 +65,13 @@ namespace GraphUI
         {
             var csv = new StringBuilder();
             csv.AppendLine("sep=#");
-            csv.AppendLine("UserId#DepartmentName#InDegreeCentrality#OutDegreeCentrality#ClosenessCentrality#BetweennessCentrality#EigenvectorCentrality");
+            csv.AppendLine("UserId#DepartmentName#InDegreeCentrality#OutDegreeCentrality#ClosenessCentrality#BetweennessCentrality#EigenvectorCentrality#ComponentNo#ComponentSize");
             foreach (var item in _report)
             {
-                var newLine = string.Format("{0}#{1}#{2}#{3}#{4}#{5}#{6}", item.UserId, item.DepartmentName, item.InDegreeCentrality,
+                var newLine = string.Format("{0}#{1}#{2}#{3}#{4}#{5}#{6}#{7}#{8}", item.UserId, item.DepartmentName, item.InDegreeCentrality,
                                                                            item.OutDegreeCentrality, item.ClosenessCentrality,
-                                                                           item.BetweennessCentrality, item.EigenvectorCentrality);
+                                                                           item.BetweennessCentrality, item.EigenvectorCentrality,
+                                                                           item.ComponentNo, item.ComponentSize);
                 csv.AppendLine(newLine);
             }
             string name = saveDialog.FileName + ".csv";

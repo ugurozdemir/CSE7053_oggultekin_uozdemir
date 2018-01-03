@@ -12,8 +12,9 @@ namespace GraphLibrary
         public long InDegreeCentrality { get; set; }
         public long OutDegreeCentrality { get; set; }
         public double ClosenessCentrality { get; set; }
-        public long BetweennessCentrality { get; set; }
+        public double BetweennessCentrality { get; set; }
         public long EigenvectorCentrality { get; set; }
-
+        public long ComponentNo { get; set; }
+        public long ComponentSize { get; set; }
     }
 }

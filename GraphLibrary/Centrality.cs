@@ -34,6 +34,7 @@ namespace GraphLibrary
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["degree"]);
             }
         }
+
         private Dictionary<object, object> inDegreeCentrality(string relType)
         {
             string statement = "match (a) <- [:{relType}] - (b) return a.uID as id, count(DISTINCT b) as degree";
@@ -43,6 +44,7 @@ namespace GraphLibrary
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["degree"]);
             }
         }
+
         private Dictionary<object, object> outDegreeCentrality(string relType)
         {
             string statement = "match (a) - [:{relType}] -> (b) return a.uID as id, count(DISTINCT b) as degree";
@@ -52,24 +54,36 @@ namespace GraphLibrary
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["degree"]);
             }
         }
+
         private Dictionary<object, object> closenessCentrality(string relType)
         {
-            string statement = "MATCH (a)-[:{relType}]-(b) WHERE a.uID<>b.uID WITH length(shortestPath((a)-[]-(b))) AS dist, a, b RETURN DISTINCT  a.uID as id, 1.0 / sum(dist)  AS closeness";
+            //statement = "MATCH (a)-[:{relType}]-(b) WHERE a.uID<>b.uID WITH length(shortestPath((a)-[]-(b))) AS dist, a, b RETURN DISTINCT  a.uID as id, 1.0 / sum(dist)  AS closeness";
+            string statement = @"CALL algo.closeness('', '{relType}', {write:true, writeProperty:'closeness'})
+                                 YIELD nodes, loadMillis, computeMillis, writeMillis;";
+
             statement = statement.Replace("{relType}", relType);
             using (var session = _driver.Session())
             {
+                session.Run(statement);
+                statement = "match(a) return a.uID as id, a.closeness as closeness";
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["closeness"]);
             }
         }
+
         private Dictionary<object, object> betweennessCentrality(string relType)
         {
-            string statement = "MATCH p=allShortestPaths((a)-[:{relType}*]-(b)) where a.uID>b.uID UNWIND nodes(p)[1..-1] as n RETURN n.uID as id, count(*) as betweenness";
+            //string statement = "MATCH p=allShortestPaths((a)-[:{relType}*]-(b)) where a.uID>b.uID UNWIND nodes(p)[1..-1] as n RETURN n.uID as id, count(*) as betweenness";
+            string statement = @"CALL algo.betweenness('','{relType}', {direction:'both',write:true, writeProperty:'betweenness'})
+                                 YIELD nodes, minCentrality, maxCentrality, sumCentrality, loadMillis, computeMillis, writeMillis;";
             statement = statement.Replace("{relType}", relType);
             using (var session = _driver.Session())
             {
+                session.Run(statement);
+                statement = "match(a) return a.uID as id, a.betweenness as betweenness";
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["betweenness"]);
             }
         }
+
         private Dictionary<object, object> eigenvectorCentrality(string relType)
         {
             string statement = "match(a) optional match(a) - [:{relType}] - (b)  return a.uID as id, collect(a.uID) as neigbors order by id";
@@ -106,6 +120,7 @@ namespace GraphLibrary
             }
             return eigenCentrality;
         }
+
         private Dictionary<object, object> getDepartmanNames()
         {
             string statement = "match(a) return a.uID as id, a.departmanName as depName order by id";
@@ -114,6 +129,23 @@ namespace GraphLibrary
                 return session.Run(statement).ToDictionary(x => x.Values["id"], x => x.Values["depName"]);
             }
         }
+
+        private Dictionary<object, List<object>> getConnectedComponents(string relType)
+        {
+            string statement = @"CALL algo.unionFind(NULL, '{relType}', {write:true, partitionProperty:'partition'})
+                                 YIELD nodes, setCount, loadMillis, computeMillis, writeMillis";
+            statement = statement.Replace("{relType}", relType);
+            using (var session = _driver.Session())
+            {
+                session.Run(statement);
+                statement = @"MATCH (a) WITH a.partition as partition, count(a.partition) as size
+                                 MATCH (b) WHERE b.partition = partition SET b.size = size";
+                session.Run(statement);
+                statement = "match(a) return a.uID as id, a.partition as partition, a.size as size";
+                return session.Run(statement).ToDictionary(x => x.Values["id"], x => new List<object>() { x.Values["partition"], x.Values["size"] });
+            }
+        }
+
         private List<User> createReport(string relType)
         {
             Dictionary<object, object> inDegreeList = inDegreeCentrality(relType);
@@ -122,6 +154,7 @@ namespace GraphLibrary
             Dictionary<object, object> betweennessList = betweennessCentrality(relType);
             Dictionary<object, object> eigenvectorList = eigenvectorCentrality(relType);
             Dictionary<object, object> depNameList = getDepartmanNames();
+            Dictionary<object, List<object>> componentList = getConnectedComponents(relType);
 
             List<User> report1 = new List<User>();
             foreach (var item in depNameList)
@@ -131,15 +164,17 @@ namespace GraphLibrary
                 closenessList.TryGetValue(item.Key, out object closenessValue);
                 betweennessList.TryGetValue(item.Key, out object betweennessValue);
                 eigenvectorList.TryGetValue(item.Key, out object eigenValue);
-
+                componentList.TryGetValue(item.Key, out List<object> component);
                 var row = new User();
                 row.UserId = item.Key.As<long>();
                 row.DepartmentName = item.Value.As<string>();
                 row.InDegreeCentrality = (long)(inDegreeValue != null ? inDegreeValue : 0L);
                 row.OutDegreeCentrality = (long)(outDegreeValue != null ? outDegreeValue : 0L);
-                row.ClosenessCentrality = (double)(closenessValue != null ? Math.Round((double)closenessValue,5) : 0d);
-                row.BetweennessCentrality = (long)(betweennessValue != null ? betweennessValue : 0L);
+                row.ClosenessCentrality = (double)(closenessValue != null ? Math.Round((double)closenessValue, 5) : 0d);
+                row.BetweennessCentrality = (double)(betweennessValue != null ? betweennessValue : 0d);
                 row.EigenvectorCentrality = (long)(eigenValue != null ? eigenValue : 0L);
+                row.ComponentNo = component != null && component.Count > 1 ? (long)component[0] : 0L;
+                row.ComponentSize = component != null && component.Count > 1 ? (long)component[1] : 0L;
 
                 report1.Add(row);
             }
