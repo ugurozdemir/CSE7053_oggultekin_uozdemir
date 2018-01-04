@@ -11,5 +11,6 @@ namespace GraphLibrary
         public const string TAKDIR = "TAKDIR";
         public const string TESEKKUR = "TESEKKUR";
         public const string DOGUMGUNU = "DOGUMGUNU";
+        public const string ALL = "ALL";
     }
 }

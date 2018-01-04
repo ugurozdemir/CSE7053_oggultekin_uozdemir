@@ -45,7 +45,10 @@
   <ItemGroup>
     <Compile Include="Centrality.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PersonelType.cs" />
     <Compile Include="RelType.cs" />
+    <Compile Include="TieStrength.cs" />
+    <Compile Include="TieStrengthReport.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>
   <ItemGroup>
