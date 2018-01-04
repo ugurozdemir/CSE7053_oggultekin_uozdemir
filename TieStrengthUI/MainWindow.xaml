@@ -41,7 +41,6 @@
                    SelectionChanged="dgPersonelType_SelectionChanged" />
         <Button Grid.Column="4"
                 Width="200"
-                Visibility="Hidden"
                 Content="Save To Excel"
                 Click="Button_Click" />
         <DataGrid  Name="dgList"

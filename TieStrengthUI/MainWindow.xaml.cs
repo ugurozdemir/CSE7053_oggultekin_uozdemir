@@ -55,7 +55,8 @@ namespace TieStrengthUI
             {
                 string personelType = (string)((ComboBox)sender).SelectedItem;
                 _isManager = personelType == PersonelType.MANAGER_TO_USER;
-                dgList.ItemsSource = _tieStrength.GetReport(_relType, _isManager);
+                _report = _tieStrength.GetReport(_relType, _isManager);
+                dgList.ItemsSource = _report;
             }
         }
         private void dgRelType_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -69,19 +70,17 @@ namespace TieStrengthUI
         }
         private void SaveDialog_FileOk(object sender, CancelEventArgs e)
         {
-            //var csv = new StringBuilder();
-            //csv.AppendLine("sep=#");
-            //csv.AppendLine("UserId#DepartmentName#InDegreeCentrality#OutDegreeCentrality#ClosenessCentrality#BetweennessCentrality#EigenvectorCentrality#ComponentNo#ComponentSize");
-            //foreach (var item in _report)
-            //{
-            //    var newLine = string.Format("{0}#{1}#{2}#{3}#{4}#{5}#{6}#{7}#{8}", item.UserId, item.DepartmentName, item.InDegreeCentrality,
-            //                                                               item.OutDegreeCentrality, item.ClosenessCentrality,
-            //                                                               item.BetweennessCentrality, item.EigenvectorCentrality,
-            //                                                               item.ComponentNo, item.ComponentSize);
-            //    csv.AppendLine(newLine);
-            //}
-            //string name = saveDialog.FileName + ".csv";
-            //File.WriteAllText(name, csv.ToString(), Encoding.GetEncoding(1252));
+            var csv = new StringBuilder();
+            csv.AppendLine("sep=#");
+            csv.AppendLine("UserId#DepartmentName#MaxTieStrength#OMaxTieUserId#MinTieUserId#MinTieUserId");
+            foreach (var item in _report)
+            {
+                var newLine = string.Format("{0}#{1}#{2}#{3}#{4}#{5}", item.UserId, item.DepartmentName, item.MaxTieStrength,
+                                                                       item.MaxTieUserId, item.MinTieStrength, item.MinTieUserId);
+                csv.AppendLine(newLine);
+            }
+            string name = saveDialog.FileName + ".csv";
+            File.WriteAllText(name, csv.ToString(), Encoding.GetEncoding(1252));
         }
         private void Button_Click(object sender, RoutedEventArgs e)
         {

@@ -48,7 +48,7 @@
     <Compile Include="PersonelType.cs" />
     <Compile Include="RelType.cs" />
     <Compile Include="TieStrength.cs" />
-    <Compile Include="TieStrengthReport.cs" />
+    <Compile Include="Tie.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>
   <ItemGroup>
